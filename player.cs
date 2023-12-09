@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class player : MonoBehaviour
@@ -13,11 +14,17 @@ public class player : MonoBehaviour
     private Coroutine _powerUpCoroutine;
     public Action OnPowerUpStart;
     public Action OnPowerUpStop;
+    private bool _isPowerUpActive;
+    [SerializeField] private Transform _respawnPoint;
+    [SerializeField] private int _health;
+    [SerializeField] private TMP_Text _healthText;
+	
 
     private Enemy _enemy; // Assuming Enemy is the correct script type
 
     private void Awake()
     {
+	UpdateUI();
         _rigidBody = GetComponent<Rigidbody>();
         _enemy = GetComponent<Enemy>(); // Replace with the actual type of the Enemy script
     }
@@ -31,6 +38,9 @@ public class player : MonoBehaviour
             _player.OnPowerUpStart += StartRetreating;
             _player.OnPowerUpStop += StopRetreating;
         }
+	UpdateUI();
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     private IEnumerator StartPowerUp()
@@ -39,12 +49,15 @@ public class player : MonoBehaviour
         yield return new WaitForSeconds(_powerUpDuration);
         Debug.Log("Stop Power Up");
 
-        if (OnPowerUpStart != null)
+        _isPowerUpActive = true;
+	if (OnPowerUpStart != null)
         {
             OnPowerUpStart();
         }
 
         yield return new WaitForSeconds(_powerUpDuration);
+
+	_isPowerUpActive = false;
         if (OnPowerUpStop != null && _enemy != null)
         {
             _enemy.StopRetreating(); // Call the appropriate method from the Enemy script
@@ -83,5 +96,37 @@ public class player : MonoBehaviour
     private void StopRetreating()
     {
         // Implement your logic for stopping retreating
+    }
+    
+    private void UpdateUI()
+    {
+	_healthText.text = "Health: " + _health;
+    }
+
+    public void Dead()
+    {
+	_health -= 1;
+	Debug.Log("Health: " + _health);
+	if (_health > 0)
+	{
+	    transform.position = _respawnPoint.position;
+	}
+	
+	else
+	{
+	   _health = 0;
+	   Debug.Log("Lose");
+	   Respawn();
+	}
+
+	UpdateUI();
+
+    }
+
+    private void Respawn()
+    {
+        _health = 3; 
+        transform.position = _respawnPoint.position;
+        UpdateUI();
     }
 }

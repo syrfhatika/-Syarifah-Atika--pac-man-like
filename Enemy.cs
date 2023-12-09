@@ -12,8 +12,9 @@ public class Enemy : MonoBehaviour
     [SerializeField] public List<Transform> Waypoints = new List<Transform>();
     [SerializeField] public float ChaseDistance;
     [SerializeField] public player player; 
-
+    [HideInInspector] public Animator Animator;
     [HideInInspector] public NavMeshAgent NavMeshAgent;
+    private bool _isPowerUpActive = false;
 
     public void SwitchState(BaseState state)
     {
@@ -27,6 +28,7 @@ public class Enemy : MonoBehaviour
         _currentState = PatrolState;
         _currentState.EnterState(this);
         NavMeshAgent = GetComponent<NavMeshAgent>();
+	Animator = GetComponent<Animator>();
     }
 
     public void StartRetreating()
@@ -46,6 +48,34 @@ public class Enemy : MonoBehaviour
             _currentState.UpdateState(this);
         }
     }
+    
+    public void Dead()
+    {
+
+	Destroy(gameObject);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+	if (_isPowerUpActive)
+        {
+	   if (collision.gameObject.CompareTag("Enemy"))
+	   {
+		collision.gameObject.GetComponent<Enemy>().Dead();
+	   }
+
+	}
+
+	   if(_currentState != RetreatState)
+	   {
+	   	if (collision.gameObject.CompareTag("player"))
+	   	{
+		     collision.gameObject.GetComponent<player>().Dead();
+	    	}
+	}
+
+     }
+
 }
 
  
